@@ -21,22 +21,6 @@ The DNA Kit Service is a simple library for handling order placement for DNA tes
 - Utilizes Test-Driven Development (TDD) with NUnit and FluentAssertions
 - Uses SOLID principles for clean and maintainable code
 
-## Getting Started
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/DNAKitService.git
-   ```
-2. Navigate to the project folder:
-   ```
-   cd DNAKitService
-   ```
-3. Open the solution file in your preferred IDE (e.g., Visual Studio):
-   ```
-   DNAKitService.sln
-   ```
-4. Build the solution and run the tests to ensure everything is working correctly.
-
 ## Usage
 
 1. Create an instance of the `OrderManager` class.
