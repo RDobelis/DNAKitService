@@ -4,9 +4,9 @@ using DNAKitService.Rules;
 using DNAKitService.Rules.Interfaces;
 using DNAKitService.Services;
 using DNAKitService.Services.Interfaces;
-using DNAKitService.Validators;
 using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
+using Moq;
 
 namespace DNAKitService.Tests
 {
@@ -14,17 +14,18 @@ namespace DNAKitService.Tests
     public class DiscountCalculatorTests
     {
         private IDiscountCalculator _discountCalculator;
-        private IOrderValidator _orderValidator;
+        private Mock<IOrderValidator> _orderValidator;
 
         [SetUp]
         public void Setup()
         {
-            _orderValidator = new OrderValidator();
+            _orderValidator = new Mock<IOrderValidator>();
+            _orderValidator.Setup(validator => validator.IsValid(It.IsAny<Order>())).Returns(true);
             var discountRules = new List<IDiscountRule>
             {
-                new QuantityDiscountRule(_orderValidator)
+                new QuantityDiscountRule(_orderValidator.Object)
             };
-            _discountCalculator = new DiscountCalculator(discountRules, _orderValidator);
+            _discountCalculator = new DiscountCalculator(discountRules, _orderValidator.Object);
         }
 
         [TestCase(10, 0.05)]
@@ -43,31 +44,16 @@ namespace DNAKitService.Tests
         }
 
         [Test]
-        public void CalculateDiscount_NullOrder_ThrowsNullDiscountOrderException()
-        {
-            // Arrange
-            Order order = null;
-
-            // Act
-            Action act = () => _discountCalculator.CalculateDiscount(order);
-
-            // Assert
-            act.Should().Throw<InvalidOrderException>()
-                .WithMessage("Order data is invalid.");
-        }
-
-        [Test]
-        public void CalculateDiscount_NoApplicableDiscount_ThrowsNoDiscountApplicableException()
+        public void CalculateDiscount_NoApplicableDiscount_ReturnsZero()
         {
             // Arrange
             var order = CreateOrder(5, new BasicDnaKit());
 
             // Act
-            Action act = () => _discountCalculator.CalculateDiscount(order);
+            var discount = _discountCalculator.CalculateDiscount(order);
 
             // Assert
-            act.Should().Throw<DiscountNotApplicableException>()
-                .WithMessage("No discounts are applicable for the provided order.");
+            discount.Should().Be(0);
         }
 
         private Order CreateOrder(int quantity, BasicDnaKit kit)

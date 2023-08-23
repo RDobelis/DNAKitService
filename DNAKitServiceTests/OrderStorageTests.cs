@@ -2,9 +2,9 @@
 using DNAKitService.Models;
 using DNAKitService.Storage;
 using DNAKitService.Storage.Interfaces;
-using DNAKitService.Validators;
 using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
+using Moq;
 
 namespace DNAKitService.Tests
 {
@@ -12,7 +12,7 @@ namespace DNAKitService.Tests
     public class OrderStorageTests
     {
         private IOrderStorage _orderStorage;
-        private IOrderValidator _orderValidator;
+        private Mock<IOrderValidator> _orderValidator;
         private static int CustomerId = 1;
         private static int Quantity = 1;
         private static DateTime DeliveryDate = DateTime.Today.AddDays(10);
@@ -20,8 +20,8 @@ namespace DNAKitService.Tests
         [SetUp]
         public void Setup()
         {
-            _orderValidator = new OrderValidator();
-            _orderStorage = new OrderStorage(_orderValidator);
+            _orderValidator = new Mock<IOrderValidator>();
+            _orderStorage = new OrderStorage(_orderValidator.Object);
         }
 
         [Test]
@@ -29,6 +29,7 @@ namespace DNAKitService.Tests
         {
             // Arrange
             var order = CreateOrder(CustomerId, DeliveryDate, Quantity);
+            ValidateTrue();
 
             // Act
             _orderStorage.SaveOrder(order);
@@ -45,6 +46,7 @@ namespace DNAKitService.Tests
             // Arrange
             var order1 = CreateOrder(CustomerId, DeliveryDate, Quantity);
             var order2 = CreateOrder(CustomerId, DeliveryDate, 2);
+            ValidateTrue();
 
             _orderStorage.SaveOrder(order1);
             _orderStorage.SaveOrder(order2);
@@ -59,23 +61,13 @@ namespace DNAKitService.Tests
         }
 
         [Test]
-        public void SaveOrder_NullOrder_ThrowsNullOrderException()
-        {
-            // Arrange
-            Order order = null;
-            
-            // Act
-            Action act = () => _orderStorage.SaveOrder(order);
-
-            // Assert
-            act.Should().Throw<InvalidOrderException>().WithMessage("Order data is invalid.");
-        }
-
-        [Test]
         public void SaveOrder_DuplicateOrder_ThrowsDuplicateOrderException()
         {
             // Arrange
             var order = CreateOrder(CustomerId, DeliveryDate, Quantity);
+
+            ValidateTrue();
+
             _orderStorage.SaveOrder(order);
 
             // Act
@@ -106,8 +98,14 @@ namespace DNAKitService.Tests
             {
                 CustomerId = customerId,
                 DeliveryDate = deliveryDate,
-                Quantity = quantity
+                Quantity = quantity, 
+                Kit = new BasicDnaKit()
             };
+        }
+
+        private void ValidateTrue()
+        {
+            _orderValidator.Setup(validator => validator.IsValid(It.IsAny<Order>())).Returns(true);
         }
     }
 }

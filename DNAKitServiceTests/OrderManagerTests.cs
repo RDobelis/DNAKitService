@@ -35,7 +35,7 @@ namespace DNAKitService.Tests
         {
             // Arrange
             var order = CreateOrder(CustomerId, DeliveryDate, Quantity);
-            _orderValidator.Setup(validator => validator.IsValid(order)).Returns(true);
+            ValidateTrue(order);
 
             // Act
             var result = _orderManager.PlaceOrder(order);
@@ -46,33 +46,19 @@ namespace DNAKitService.Tests
         }
 
         [Test]
-        public void PlaceOrder_InvalidOrder_OrderIsNotSaved()
+        public void PlaceOrder_InvalidDate_OrderIsNotSaved()
         {
             // Arrange
             var order = CreateOrder(CustomerId, DateTime.Today, Quantity);
-            _orderValidator.Setup(validator => validator.IsValid(order)).Returns(false);
+            ValidateFalse(order);
 
             // Act
             Action act = () => _orderManager.PlaceOrder(order);
 
             // Assert
             act.Should().Throw<InvalidOrderException>()
-                .WithMessage("Order data is invalid.");
+                .WithMessage("Delivery date is invalid.");
             _orderStorage.Verify(x => x.SaveOrder(order), Times.Never);
-        }
-
-        [Test]
-        public void PlaceOrder_NullOrder_ThrowsInvalidOrderException()
-        {
-            // Arrange
-            Order order = null;
-
-            // Act
-            Action act = () => _orderManager.PlaceOrder(order);
-
-            // Assert
-            act.Should().Throw<InvalidOrderException>()
-                .WithMessage("Order data is invalid.");
         }
 
         [Test]
@@ -80,7 +66,7 @@ namespace DNAKitService.Tests
         {
             // Arrange
             var order = CreateOrder(CustomerId, DeliveryDate, Quantity);
-            _orderValidator.Setup(validator => validator.IsValid(order)).Returns(true);
+            ValidateTrue(order);
             _orderStorage.Setup(storage => storage.SaveOrder(order))
                 .Throws(new Exception("Database error"));
 
@@ -99,7 +85,7 @@ namespace DNAKitService.Tests
         {
             // Arrange
             var order = CreateOrder(CustomerId, DeliveryDate, orderQuantity);
-            _orderValidator.Setup(validator => validator.IsValid(order)).Returns(true);
+            ValidateTrue(order);
             var expectedDiscount = order.BasePrice * expectedDiscountRate * orderQuantity;
             _discountCalculator.Setup(calculator => calculator.CalculateDiscount(order)).Returns(expectedDiscount);
 
@@ -121,6 +107,7 @@ namespace DNAKitService.Tests
                 CreateOrder(CustomerId, DateTime.Today.AddDays(15), 10),
                 CreateOrder(CustomerId, DateTime.Today.AddDays(20), 100)
             };
+            foreach (var order in orders) ValidateTrue(order);
             _orderStorage.Setup(storage => storage.GetOrders(CustomerId)).Returns(orders);
 
             // Act
@@ -154,5 +141,17 @@ namespace DNAKitService.Tests
                 Kit = new BasicDnaKit()
             };
         }
+
+        private void ValidateTrue(Order order)
+        {
+            _orderValidator.Setup(validator => validator.IsValid(order)).Returns(true);
+        }
+
+        private void ValidateFalse(Order order)
+        {
+            _orderValidator.Setup(validator => validator.IsValid(order))
+                .Throws(new InvalidOrderException("Delivery date is invalid."));
+        }
+
     }
 }

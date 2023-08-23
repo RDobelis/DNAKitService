@@ -1,5 +1,8 @@
-﻿using DNAKitService.Models;
+﻿using DNAKitService.Exceptions;
+using DNAKitService.Models;
+using DNAKitService.Tests.Helpers;
 using DNAKitService.Validators;
+using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
 
 namespace DNAKitService.Tests
@@ -7,7 +10,7 @@ namespace DNAKitService.Tests
     [TestFixture]
     public class OrderValidatorTests
     {
-        private OrderValidator _orderValidator;
+        private IOrderValidator _orderValidator;
 
         [SetUp]
         public void Setup()
@@ -15,54 +18,89 @@ namespace DNAKitService.Tests
             _orderValidator = new OrderValidator();
         }
 
-        [TestCase(-1, "DeliveryDate in the future", ExpectedResult = false)]
-        [TestCase(0, "DeliveryDate in the future", ExpectedResult = false)]
-        [TestCase(1, "DeliveryDate in the future", ExpectedResult = true)]
-        [TestCase(1000, "DeliveryDate in the future", ExpectedResult = false)]
-        [TestCase(0, "Today's Date", ExpectedResult = false)]
-        [TestCase(1, "Past Date", ExpectedResult = false)]
-        public bool IsValid_VariousOrderScenarios_ReturnsExpectedValidity(int quantity, string dateScenario)
+        [TestCase(-1, DateScenario.DeliveryDateInTheFuture, false)]
+        [TestCase(0, DateScenario.DeliveryDateInTheFuture, false)]
+        [TestCase(1, DateScenario.DeliveryDateInTheFuture, true)]
+        [TestCase(1000, DateScenario.DeliveryDateInTheFuture, false)]
+        [TestCase(500, DateScenario.DeliveryDateInTheFuture, true)]
+        public void IsValid_WithVariousQuantitiesAndFutureDeliveryDate_ShouldValidate(int quantity, DateScenario dateScenario,
+            bool expectedValidity)
         {
-            // Arrange
-            var order = CreateOrder(quantity, dateScenario);
+            ValidateOrder(quantity, dateScenario, expectedValidity);
+        }
 
-            // Act & Assert
-            return _orderValidator.IsValid(order);
+        [TestCase(1, DateScenario.TodaysDate, false)]
+        [TestCase(1000, DateScenario.TodaysDate, false)]
+        public void IsValid_WithVariousQuantitiesAndTodaysDate_ShouldValidate(int quantity, DateScenario dateScenario,
+            bool expectedValidity)
+        {
+            ValidateOrder(quantity, dateScenario, expectedValidity);
+        }
+
+        [TestCase(0, DateScenario.PastDate, false)]
+        public void IsValid_WithVariousQuantitiesAndPastDate_ShouldValidate(int quantity, DateScenario dateScenario,
+            bool expectedValidity)
+        {
+            ValidateOrder(quantity, dateScenario, expectedValidity);
         }
 
         [Test]
-        public void IsValid_NullOrder_ReturnsFalse()
+        public void IsValid_NullOrder_ThrowsException()
         {
             // Arrange
             Order order = null;
 
             // Act
-            var result = _orderValidator.IsValid(order);
+            Action act = () => _orderValidator.IsValid(order);
 
             // Assert
-            result.Should().BeFalse();
+            act.Should().Throw<NullOrderException>();
         }
 
-        private Order CreateOrder(int quantity, string dateScenario)
+        [Test]
+        public void IsValid_InvalidCustomerId_ThrowsException()
         {
-            DateTime deliveryDate;
-            switch (dateScenario)
+            // Arrange
+            var order = CreateOrder(-1, DateScenario.DeliveryDateInTheFuture);
+            order.CustomerId = 0;
+
+            // Act
+            Action act = () => _orderValidator.IsValid(order);
+
+            // Assert
+            act.Should().Throw<InvalidOrderException>();
+        }
+
+        private void ValidateOrder(int quantity, DateScenario dateScenario, bool expectedValidity)
+        {
+            var order = CreateOrder(quantity, dateScenario);
+
+            if (expectedValidity)
             {
-                case "Past Date":
-                    deliveryDate = DateTime.Today.AddDays(-1);
-                    break;
-                case "DeliveryDate in the future":
-                    deliveryDate = DateTime.Today.AddDays(10);
-                    break;
-                default:
-                    deliveryDate = DateTime.Today;
-                    break;
+                _orderValidator.IsValid(order).Should().BeTrue();
             }
+            else
+            {
+                Action act = () => _orderValidator.IsValid(order);
+                act.Should().Throw<InvalidOrderException>();
+            }
+        }
+
+        private Order CreateOrder(int quantity, DateScenario dateScenario)
+        {
+            DateTime deliveryDate = dateScenario switch
+            {
+                DateScenario.PastDate => DateTime.Today.AddDays(-1),
+                DateScenario.DeliveryDateInTheFuture => DateTime.Today.AddDays(10),
+                _ => DateTime.Today
+            };
 
             return new Order
             {
+                CustomerId = 1,
                 Quantity = quantity,
-                DeliveryDate = deliveryDate
+                DeliveryDate = deliveryDate,
+                Kit = new BasicDnaKit()
             };
         }
     }
