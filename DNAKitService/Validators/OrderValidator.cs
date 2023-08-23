@@ -1,4 +1,5 @@
-﻿using DNAKitService.Models;
+﻿using DNAKitService.Exceptions;
+using DNAKitService.Models;
 using DNAKitService.Validators.Interfaces;
 
 namespace DNAKitService.Validators
@@ -8,13 +9,16 @@ namespace DNAKitService.Validators
         public bool IsValid(Order order)
         {
             if (order == null)
-                return false;
+                throw new NullOrderException("Order data is null.");
+
+            if (order.CustomerId <= 0)
+                throw new InvalidOrderException("CustomerId is invalid.");
             
             if (order.DeliveryDate <= DateTime.Today)
-                return false;
+                throw new InvalidOrderException("Delivery date is invalid.");
             
             if (order.Quantity <= 0 || order.Quantity > 999)
-                return false;
+                throw new InvalidOrderException("Quantity is invalid.");
             
             return true;
         }

@@ -1,5 +1,4 @@
-﻿using DNAKitService.Exceptions;
-using DNAKitService.Models;
+﻿using DNAKitService.Models;
 using DNAKitService.Rules.Interfaces;
 using DNAKitService.Validators.Interfaces;
 
@@ -16,8 +15,7 @@ namespace DNAKitService.Rules
 
         public bool IsApplicable(Order order)
         {
-            if (!_orderValidator.IsValid(order))
-                throw new InvalidOrderException("Order data is invalid.");
+            _orderValidator.IsValid(order);
 
             return order.Quantity >= 10;
         }
@@ -33,7 +31,7 @@ namespace DNAKitService.Rules
             if (order.Quantity >= 10)
                 return order.BasePrice * basicDiscount;
 
-            throw new DiscountNotApplicableException("Discount is not applicable for this order.");
+            return 0;
         }
     }
 }

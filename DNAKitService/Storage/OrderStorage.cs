@@ -17,8 +17,7 @@ namespace DNAKitService.Storage
 
         public void SaveOrder(Order order)
         {
-            if (!_orderValidator.IsValid(order))
-                throw new InvalidOrderException("Order data is invalid.");
+            _orderValidator.IsValid(order);
 
             if (_orders.Any(o => o.CustomerId == order.CustomerId && o.Quantity == order.Quantity))
                 throw new DuplicateOrderException(

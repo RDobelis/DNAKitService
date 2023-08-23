@@ -22,8 +22,7 @@ namespace DNAKitService.Services
 
         public bool PlaceOrder(Order order)
         {
-            if (!_orderValidator.IsValid(order))
-                throw new InvalidOrderException("Order data is invalid.");
+            _orderValidator.IsValid(order);
 
             var discount = _discountCalculator.CalculateDiscount(order);
             order.FinalPrice = order.BasePrice * order.Quantity - discount;
