@@ -54,7 +54,7 @@ namespace DNAKitService.Tests
             Action act = () => _orderValidator.IsValid(order);
 
             // Assert
-            act.Should().Throw<NullOrderException>();
+            act.Should().Throw<NullOrderException>().WithMessage($"{nameof(order)} data is null.");
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace DNAKitService.Tests
             Action act = () => _orderValidator.IsValid(order);
 
             // Assert
-            act.Should().Throw<InvalidOrderException>();
+            act.Should().Throw<InvalidOrderException>().WithMessage($"{nameof(order.CustomerId)} is invalid.");
         }
 
         private void ValidateOrder(int quantity, DateScenario dateScenario, bool expectedValidity)
