@@ -1,6 +1,9 @@
 ﻿using DNAKitService.Exceptions;
 using DNAKitService.Models;
 using DNAKitService.Storage;
+using DNAKitService.Storage.Interfaces;
+using DNAKitService.Validators;
+using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
 
 namespace DNAKitService.Tests
@@ -8,7 +11,8 @@ namespace DNAKitService.Tests
     [TestFixture]
     public class OrderStorageTests
     {
-        private OrderStorage _orderStorage;
+        private IOrderStorage _orderStorage;
+        private IOrderValidator _orderValidator;
         private static int CustomerId = 1;
         private static int Quantity = 1;
         private static DateTime DeliveryDate = DateTime.Today.AddDays(10);
@@ -16,7 +20,8 @@ namespace DNAKitService.Tests
         [SetUp]
         public void Setup()
         {
-            _orderStorage = new OrderStorage();
+            _orderValidator = new OrderValidator();
+            _orderStorage = new OrderStorage(_orderValidator);
         }
 
         [Test]
@@ -63,7 +68,7 @@ namespace DNAKitService.Tests
             Action act = () => _orderStorage.SaveOrder(order);
 
             // Assert
-            act.Should().Throw<NullOrderException>().WithMessage("Cannot save a null order.");
+            act.Should().Throw<InvalidOrderException>().WithMessage("Order data is invalid.");
         }
 
         [Test]

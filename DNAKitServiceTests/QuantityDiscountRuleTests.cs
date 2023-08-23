@@ -1,6 +1,9 @@
 ﻿using DNAKitService.Exceptions;
 using DNAKitService.Models;
 using DNAKitService.Rules;
+using DNAKitService.Rules.Interfaces;
+using DNAKitService.Validators;
+using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
 
 namespace DNAKitService.Tests
@@ -8,12 +11,14 @@ namespace DNAKitService.Tests
     [TestFixture]
     public class QuantityDiscountRuleTests
     {
-        private QuantityDiscountRule _rule;
+        private IDiscountRule _rule;
+        private IOrderValidator _orderValidator;
 
         [SetUp]
         public void Setup()
         {
-            _rule = new QuantityDiscountRule();
+            _orderValidator = new OrderValidator();
+            _rule = new QuantityDiscountRule(_orderValidator);
         }
 
         [TestCase(9, false)]
@@ -50,7 +55,7 @@ namespace DNAKitService.Tests
             Action action = () => _rule.IsApplicable(order);
 
             // Assert
-            action.Should().Throw<InvalidOrderException>().WithMessage("Order cannot be null.");
+            action.Should().Throw<InvalidOrderException>().WithMessage("Order data is invalid.");
         }
 
         [Test]
@@ -63,7 +68,7 @@ namespace DNAKitService.Tests
             Action action = () => _rule.IsApplicable(order);
 
             // Assert
-            action.Should().Throw<InvalidOrderException>().WithMessage("Order quantity cannot be negative.");
+            action.Should().Throw<InvalidOrderException>().WithMessage("Order data is invalid.");
         }
 
         [Test]
@@ -79,18 +84,25 @@ namespace DNAKitService.Tests
 
         private bool CheckIsApplicableForQuantity(int quantity)
         {
-            var order = new Order { Quantity = quantity };
+            var order = CreateOrder(quantity);
             return _rule.IsApplicable(order);
         }
 
         private double CalculateDiscountForQuantity(int quantity)
         {
-            var order = new Order
+            var order = CreateOrder(quantity);
+            return _rule.CalculateDiscount(order);
+        }
+
+        private Order CreateOrder(int quantity)
+        {
+            return new Order
             {
+                CustomerId = 1,
                 Quantity = quantity,
+                DeliveryDate = DateTime.Today.AddDays(10),
                 Kit = new BasicDnaKit()
             };
-            return _rule.CalculateDiscount(order);
         }
     }
 }

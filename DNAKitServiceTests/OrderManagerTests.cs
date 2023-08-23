@@ -72,7 +72,7 @@ namespace DNAKitService.Tests
 
             // Assert
             act.Should().Throw<InvalidOrderException>()
-                .WithMessage("Order cannot be null.");
+                .WithMessage("Order data is invalid.");
         }
 
         [Test]

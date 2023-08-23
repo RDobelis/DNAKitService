@@ -4,6 +4,8 @@ using DNAKitService.Rules;
 using DNAKitService.Rules.Interfaces;
 using DNAKitService.Services;
 using DNAKitService.Services.Interfaces;
+using DNAKitService.Validators;
+using DNAKitService.Validators.Interfaces;
 using FluentAssertions;
 
 namespace DNAKitService.Tests
@@ -12,15 +14,17 @@ namespace DNAKitService.Tests
     public class DiscountCalculatorTests
     {
         private IDiscountCalculator _discountCalculator;
+        private IOrderValidator _orderValidator;
 
         [SetUp]
         public void Setup()
         {
+            _orderValidator = new OrderValidator();
             var discountRules = new List<IDiscountRule>
             {
-                new QuantityDiscountRule()
+                new QuantityDiscountRule(_orderValidator)
             };
-            _discountCalculator = new DiscountCalculator(discountRules);
+            _discountCalculator = new DiscountCalculator(discountRules, _orderValidator);
         }
 
         [TestCase(10, 0.05)]
@@ -48,8 +52,8 @@ namespace DNAKitService.Tests
             Action act = () => _discountCalculator.CalculateDiscount(order);
 
             // Assert
-            act.Should().Throw<NullOrderException>()
-                .WithMessage("Cannot calculate discount for a null order.");
+            act.Should().Throw<InvalidOrderException>()
+                .WithMessage("Order data is invalid.");
         }
 
         [Test]
@@ -70,7 +74,9 @@ namespace DNAKitService.Tests
         {
             return new Order
             {
+                CustomerId = 1,
                 Quantity = quantity,
+                DeliveryDate = DateTime.Today.AddDays(10),
                 Kit = kit
             };
         }
