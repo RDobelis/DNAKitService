@@ -9,16 +9,16 @@ namespace DNAKitService.Validators
         public bool IsValid(Order order)
         {
             if (order == null)
-                throw new NullOrderException("Order data is null.");
+                throw new NullOrderException($"{nameof(order)} data is null.");
 
             if (order.CustomerId <= 0)
-                throw new InvalidOrderException("CustomerId is invalid.");
+                throw new InvalidOrderException($"{nameof(order.CustomerId)} is invalid.");
             
             if (order.DeliveryDate <= DateTime.Today)
-                throw new InvalidOrderException("Delivery date is invalid.");
+                throw new InvalidOrderException($"{nameof(order.DeliveryDate)} is invalid.");
             
             if (order.Quantity <= 0 || order.Quantity > 999)
-                throw new InvalidOrderException("Quantity is invalid.");
+                throw new InvalidOrderException($"{nameof(order.Quantity)} is invalid.");
             
             return true;
         }
