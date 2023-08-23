@@ -134,7 +134,7 @@ namespace DNAKitService.Tests
         public void ListOrders_NoOrdersForCustomer_ThrowsOrdersNotFoundException()
         {
             // Arrange
-            _orderStorage.Setup(storage => storage.GetOrders(CustomerId)).Returns(new List<Order>()); // No orders
+            _orderStorage.Setup(storage => storage.GetOrders(CustomerId)).Returns(new List<Order>());
 
             // Act
             Action act = () => _orderManager.ListOrders(CustomerId);
