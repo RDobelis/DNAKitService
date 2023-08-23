@@ -35,7 +35,7 @@ namespace DNAKitService.Tests
             _orderStorage.SaveOrder(order);
 
             // Assert
-            var savedOrder = _orderStorage.GetOrders(1).FirstOrDefault();
+            var savedOrder = _orderStorage.GetOrders(CustomerId).FirstOrDefault();
 
             savedOrder.Should().BeEquivalentTo(order);
         }
