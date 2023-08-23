@@ -22,9 +22,6 @@ namespace DNAKitService.Services
 
         public bool PlaceOrder(Order order)
         {
-            if (order == null)
-                throw new InvalidOrderException("Order cannot be null.");
-
             if (!_orderValidator.IsValid(order))
                 throw new InvalidOrderException("Order data is invalid.");
 

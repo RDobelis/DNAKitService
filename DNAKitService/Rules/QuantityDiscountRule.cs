@@ -1,18 +1,23 @@
 ﻿using DNAKitService.Exceptions;
 using DNAKitService.Models;
 using DNAKitService.Rules.Interfaces;
+using DNAKitService.Validators.Interfaces;
 
 namespace DNAKitService.Rules
 {
     public class QuantityDiscountRule : IDiscountRule
     {
+        private readonly IOrderValidator _orderValidator;
+
+        public QuantityDiscountRule(IOrderValidator orderValidator)
+        {
+            _orderValidator = orderValidator;
+        }
+
         public bool IsApplicable(Order order)
         {
-            if (order == null)
-                throw new InvalidOrderException("Order cannot be null.");
-
-            if (order.Quantity < 0)
-                throw new InvalidOrderException("Order quantity cannot be negative.");
+            if (!_orderValidator.IsValid(order))
+                throw new InvalidOrderException("Order data is invalid.");
 
             return order.Quantity >= 10;
         }

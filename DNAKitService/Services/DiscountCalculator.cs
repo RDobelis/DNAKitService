@@ -2,22 +2,25 @@
 using DNAKitService.Models;
 using DNAKitService.Rules.Interfaces;
 using DNAKitService.Services.Interfaces;
+using DNAKitService.Validators.Interfaces;
 
 namespace DNAKitService.Services
 {
     public class DiscountCalculator : IDiscountCalculator
     {
         private readonly List<IDiscountRule> _discountRules;
+        private readonly IOrderValidator _orderValidator;
 
-        public DiscountCalculator(List<IDiscountRule> discountRules)
+        public DiscountCalculator(List<IDiscountRule> discountRules, IOrderValidator orderValidator)
         {
             _discountRules = discountRules;
+            _orderValidator = orderValidator;
         }
 
         public double CalculateDiscount(Order order)
         {
-            if (order == null)
-                throw new NullOrderException("Cannot calculate discount for a null order.");
+            if (!_orderValidator.IsValid(order))
+                throw new InvalidOrderException("Order data is invalid.");
 
             double totalDiscount = _discountRules
                 .Where(rule => rule.IsApplicable(order))
