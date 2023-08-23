@@ -61,7 +61,7 @@ namespace DNAKitService.Tests
         public void IsValid_InvalidCustomerId_ThrowsException()
         {
             // Arrange
-            var order = CreateOrder(-1, DateScenario.DeliveryDateInTheFuture);
+            var order = CreateOrder(1, DateScenario.DeliveryDateInTheFuture);
             order.CustomerId = 0;
 
             // Act
